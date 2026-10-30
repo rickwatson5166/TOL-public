@@ -111,7 +111,7 @@ unmatched is shown as unidentified. Never add a mapping you have not verified.
 `python -m pytest` (standard library plus pytest; no other dependencies).
 
 ## Contact
-optioncsolutions@gmail.com (Option C Productions). Tell me what is wrong, unclear or missing: a neutral tool is only worth having if it can be corrected.
+optioncsolutions@gmail.com (Option C Solutions). Tell me what is wrong, unclear or missing: a neutral tool is only worth having if it can be corrected.
 
 ## Licence
 Apache License 2.0. See `LICENSE` and `NOTICE`.
