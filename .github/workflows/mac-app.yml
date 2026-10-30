@@ -1,0 +1,100 @@
+name: mac-app
+
+# Mac minutes are billed at 10x, so keep runs few: pull requests, main, release tags, or by hand.
+# The Intel build always runs; the Apple-silicon build only for releases and manual runs.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: mac-app-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON((startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && '["macos-15-intel","macos-latest"]' || '["macos-15-intel"]') }}   # Intel always; Apple silicon for releases
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install . pytest pyinstaller
+      - name: Tests (includes the real-nettop parser test)
+        run: python -m pytest -q -rs
+      - name: Diagnose (shows real nettop output on this runner)
+        run: python -m tol_app --diagnose
+      - name: Build TOL.app, zip and dmg
+        run: ./scripts/package_mac.sh
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      - name: Smoke test the built app
+        run: ./scripts/smoke_test.sh dist/TOL.app/Contents/MacOS/TOL
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tol-mac-${{ runner.arch }}
+          path: |
+            dist/TOL-*.zip
+            dist/TOL-*.dmg
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install . pytest pyinstaller
+      - name: Tests
+        run: python -m pytest -q -rs
+      - name: Diagnose (shows what PowerShell returns on this runner)
+        run: python -m tol_app --diagnose
+      - name: Build TOL.exe folder and zip
+        run: |
+          pyinstaller --noconfirm --clean scripts/tol_win.spec
+          Compress-Archive -Path dist/TOL -DestinationPath dist/TOL-windows-x64.zip
+      - name: Smoke test the built app
+        shell: bash
+        run: ./scripts/smoke_test.sh dist/TOL/TOL.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tol-windows-x64
+          path: dist/TOL-windows-x64.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The release may already exist (created in the GitHub web page): then attach the files to it.
+          if gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload "${{ github.ref_name }}" artifacts/* --repo "${{ github.repository }}" --clobber
+          else
+            gh release create "${{ github.ref_name }}" artifacts/* --repo "${{ github.repository }}" --generate-notes
+          fi

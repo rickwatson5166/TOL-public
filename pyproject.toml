@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tol"
+version = "0.4.7"
+description = "TOL: a transparent, neutral view of which companies your device is sending data to"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+dependencies = []          # TOL itself needs only the standard library
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+tol = "tol_app.cli:main"
+
+[tool.setuptools]
+py-modules = ["tol_registry", "tol_collector", "tol_collector_mac", "tol_collector_win"]
+
+[tool.setuptools.packages.find]
+include = ["tol_app*"]
+
+[tool.setuptools.package-data]
+tol_app = ["static/*.html"]

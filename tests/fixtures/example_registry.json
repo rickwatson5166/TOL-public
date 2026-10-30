@@ -1,0 +1,20 @@
+{
+  "35.192.0.0/16": {
+    "company": "Stripe",
+    "category": "payment-processor",
+    "trust_level": "high",
+    "notes": "EXAMPLE ONLY: fabricated mapping for tests"
+  },
+  "10.20.0.0/16": {
+    "company": "CloudBackup Inc",
+    "category": "storage",
+    "trust_level": "medium",
+    "notes": "EXAMPLE ONLY: fabricated mapping for tests"
+  },
+  ".stripe.com": {
+    "company": "Stripe",
+    "category": "payment-processor",
+    "trust_level": "high",
+    "notes": "EXAMPLE ONLY"
+  }
+}

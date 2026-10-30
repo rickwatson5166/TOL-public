@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TOL Transparent Window</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+/* Layout: one reading column on a cool slate ground; a dark evidence panel is the only strong contrast. */
+:root {
+  --bg: #F5F7F9; --surface: #FFFFFF; --fg: #14202B; --muted: #4F5D6A; --line: #D3DAE1;
+  --accent: #1F5FA8; --accent-soft: #E3EDF8; --ok: #1B7A4B; --bad: #B3261E; --note: #8A5A00;
+  --panel: #0F1A24; --panel-fg: #DCE6EF; --panel-line: #25384A;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D141B; --surface: #131D27; --fg: #E5ECF2; --muted: #98A7B5; --line: #26343F;
+    --accent: #7DB2EC; --accent-soft: #17283A; --ok: #5CC892; --bad: #F2918A; --note: #E0B15A;
+    --panel: #0A1118; --panel-fg: #DCE6EF; --panel-line: #25384A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D141B; --surface: #131D27; --fg: #E5ECF2; --muted: #98A7B5; --line: #26343F;
+  --accent: #7DB2EC; --accent-soft: #17283A; --ok: #5CC892; --bad: #F2918A; --note: #E0B15A;
+  --panel: #0A1118; --panel-fg: #DCE6EF; --panel-line: #25384A; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 20px; padding-block: 0 56px; }
+* { box-sizing: border-box; }
+main { max-width: 860px; margin-inline: auto; }
+header { padding-block: 56px 36px; border-bottom: 1px solid var(--line); }
+.tag { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 18px; }
+h1 { font-size: clamp(28px, 5.4vw, 44px); line-height: 1.12; font-weight: 600; letter-spacing: -.02em; margin: 0 0 18px; text-wrap: balance; max-width: 22ch; }
+.lede { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 60ch; margin: 0 0 22px; }
+.status { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 0; padding: 0; list-style: none; }
+.status li { font: 400 13px/1 var(--mono); padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--muted); }
+section { padding-block: 40px 8px; }
+h2 { font-size: 24px; line-height: 1.25; font-weight: 600; letter-spacing: -.01em; margin: 0 0 12px; text-wrap: balance; }
+h3 { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
+p { margin: 0 0 14px; max-width: 66ch; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 20px 32px; margin-top: 18px; }
+.cols > div { min-width: 0; }
+ul.plain { margin: 0; padding-left: 20px; }
+ul.plain li { margin-bottom: 8px; max-width: 62ch; }
+.mock { margin-top: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.mock-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.mock-head strong { color: var(--fg); font-weight: 600; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); border-bottom: 1px solid var(--line); }
+.tile { padding: 14px 16px; border-right: 1px solid var(--line); }
+.tile:last-child { border-right: 0; }
+.tile b { display: block; font: 500 22px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.tile span { font-size: 12px; color: var(--muted); }
+.alert { margin: 14px 16px 0; padding: 10px 12px; background: var(--accent-soft); border-radius: 4px; font-size: 14px; }
+.alert i { font: 500 11px/1 var(--mono); font-style: normal; letter-spacing: .06em; color: var(--accent); margin-right: 8px; }
+.tablewrap { overflow-x: auto; padding: 8px 0 4px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+th { text-align: left; font: 500 12px/1 var(--mono); color: var(--muted); padding: 10px 16px; letter-spacing: .04em; text-transform: uppercase; }
+td { padding: 12px 16px; border-top: 1px solid var(--line); vertical-align: top; }
+td small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+.badge { font: 500 11px/1 var(--mono); padding: 3px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; white-space: nowrap; }
+.caption { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.switch { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 12px; }
+.switch button { font: 500 14px/1 var(--sans); padding: 11px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 4px; cursor: pointer; }
+.switch button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+pre.out { margin: 0; padding: 18px 18px; background: var(--panel); color: var(--panel-fg); border: 1px solid var(--panel-line); border-radius: 6px; font: 400 13px/1.7 var(--mono); overflow-x: auto; white-space: pre; }
+.pass { color: #5CC892; } .fail { color: #F2918A; } .note { color: #E0B15A; } .dim { color: #8DA0B2; }
+ol.steps { margin: 14px 0 0; padding-left: 22px; }
+ol.steps li { margin-bottom: 8px; max-width: 62ch; }
+code { font: 400 14px/1 var(--mono); background: var(--accent-soft); padding: 2px 5px; border-radius: 3px; }
+footer { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+footer p { max-width: 70ch; }
+@media (prefers-reduced-motion: no-preference) { .switch button { transition: background .15s, border-color .15s; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <p class="tag">TOL · transparent, neutral, local</p>
+  <h1>See which companies your computer is sending data to.</h1>
+  <p class="lede">TOL is a small program that watches a computer's network connections and reports them in plain language. It does not block anything, and it never reads what is inside the traffic.</p>
+  <ul class="status">
+    <li>Version 0.4.6</li>
+    <li>Mac: working, tested on an Intel Mac</li>
+    <li>Windows: built, tested by machine</li>
+    <li>Not yet code-signed</li>
+  </ul>
+</header>
+
+<section>
+  <h2>What it shows</h2>
+  <p>For every outside connection, TOL lists who the data is going to, which program on the computer sent it, how much, and when it was last seen. The first time a program contacts a new company, TOL raises a notice.</p>
+  <div class="mock" role="img" aria-label="Example of the TOL dashboard with sample values: three summary tiles, one alert and a table of destinations.">
+    <div class="mock-head"><strong>TOL: who your device is sending data to</strong><span>Live · watching for 1m</span></div>
+    <div class="tiles">
+      <div class="tile"><b>159.3 KB</b><span>Sent since start</span></div>
+      <div class="tile"><b>392.8 KB</b><span>Received since start</span></div>
+      <div class="tile"><b>9</b><span>Destinations</span></div>
+      <div class="tile"><b>2</b><span>Alerts</span></div>
+    </div>
+    <div class="alert"><i>INFO</i>First time sending data to Dropbox, Inc. (from DropboxFileProv)</div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Destination</th><th>Program</th><th class="num">Sent, last minute</th><th class="num">Total received</th></tr></thead>
+        <tbody>
+          <tr><td>Anthropic, PBC<span class="badge">network owner</span><small>Registered to Anthropic, PBC · block 160.79.104.0/21</small></td><td>Claude Helper</td><td class="num">75.1 KB</td><td class="num">28.5 KB</td></tr>
+          <tr><td>Google LLC<span class="badge">network owner</span><small>Registered to Google LLC · block 142.250.0.0/15</small></td><td>Google Chrome Helper</td><td class="num">33.8 KB</td><td class="num">109.6 KB</td></tr>
+          <tr><td>Dropbox, Inc.<span class="badge">network owner</span><small>Registered to Dropbox, Inc. · block 162.125.0.0/16</small></td><td>DropboxFileProv</td><td class="num">8.9 KB</td><td class="num">12.5 KB</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="caption">Illustration built from values seen on a Mac running TOL. The layout is the real dashboard; the numbers change every second.</p>
+</section>
+
+<section>
+  <h2>What it does not do</h2>
+  <p>A monitor is only useful if its limits are stated. These are TOL's.</p>
+  <div class="cols">
+    <div>
+      <h3>It does not read content</h3>
+      <p>Most traffic is encrypted. TOL sees the destination, the program and the amount. It does not see the words, files or pages inside.</p>
+      <h3>It does not block or change anything</h3>
+      <p>It only watches. Turning it off leaves the computer exactly as it was.</p>
+    </div>
+    <div>
+      <h3>It can miss very short connections</h3>
+      <p>A connection that opens and closes between two checks, a few seconds apart, can go unseen. The dashboard says so on screen.</p>
+      <h3>Windows shows less</h3>
+      <p>Windows does not give ordinary programs per-connection byte counts, so the Windows version lists connections and programs and shows amounts as n/a.</p>
+    </div>
+  </div>
+  <p style="margin-top:14px">Naming the owner of an address means asking a public registry about that address. TOL asks permission before doing so, and the setting is off until the user turns it on.</p>
+</section>
+
+<section>
+  <h2>A record anyone can check</h2>
+  <p>TOL can save a recording and wrap it as an evidence package: the recording, the ownership records it relied on, and a small checking script. Anyone with the folder can run one command and see whether it is intact. The two results below are real output from a Mac.</p>
+  <div class="switch" role="group" aria-label="Choose which result to show">
+    <button id="btn-clean" type="button" aria-pressed="true">Package as recorded</button>
+    <button id="btn-edit" type="button" aria-pressed="false">After one file is added</button>
+  </div>
+  <pre class="out" id="out" aria-live="polite"></pre>
+  <p class="caption" id="out-note"></p>
+  <ol class="steps">
+    <li>Record for as long as needed, then create the evidence package.</li>
+    <li>Open the package folder in a terminal and run <code>python3 verify.py</code>.</li>
+    <li>Optionally add a trusted timestamp. TOL sends only a fingerprint of the package to an independent timestamp authority, so the time no longer rests on the computer's own clock. The checking script verifies the authority's signature itself, with nothing extra to install.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Where the project stands</h2>
+  <div class="cols">
+    <div>
+      <h3>Done</h3>
+      <ul class="plain">
+        <li>Mac app, tested on an Intel Mac, with an Apple-chip build also published</li>
+        <li>Windows app that passes its automated tests</li>
+        <li>Evidence packages that verify, and fail when altered</li>
+        <li>A written description of the method and its limits</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <ul class="plain">
+        <li>Test the Windows app, and the Apple-chip Mac build, on real computers</li>
+        <li>Code-sign both apps, so computers stop showing a first-time warning</li>
+        <li>Independent review of the method</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Trying it</h2>
+  <p>TOL runs on the person's own computer and shows its dashboard only on that computer. Nothing is uploaded. Downloads are shared privately, one person at a time, by whoever sent you this page.</p>
+</section>
+
+<footer>
+  <p>TOL is early software. It is not yet code-signed, so a Mac or Windows computer will show a first-time warning when it is opened, and some managed computers may not allow it. A description of how TOL records, what it can prove and what it cannot is available alongside the download.</p>
+</footer>
+</main>
+
+<script>
+(function () {
+  var clean =
+    '<span class="pass">PASS</span>  File hashes match MANIFEST.sha256\n' +
+    '<span class="pass">PASS</span>  Network event chain unbroken  (44 events)\n' +
+    '<span class="pass">PASS</span>  Destination receipts match their stored records  (5 receipts)\n' +
+    '<span class="note">NOTE</span>  No trusted timestamp\n' +
+    '<span class="dim">      - its times come from the device\'s own clock.</span>\n\n' +
+    'ALL CHECKS PASSED\n' +
+    '<span class="dim">(the package\'s contents are consistent; the time is the device\'s own clock.)</span>';
+  var changed =
+    '<span class="fail">FAIL</span>  File hashes match MANIFEST.sha256\n' +
+    '<span class="dim">      - extra file not in manifest: device-info.json</span>\n' +
+    '<span class="pass">PASS</span>  Network event chain unbroken  (44 events)\n' +
+    '<span class="pass">PASS</span>  Destination receipts match their stored records  (5 receipts)\n' +
+    '<span class="note">NOTE</span>  No trusted timestamp\n\n' +
+    '<span class="fail">SOMETHING FAILED: do not rely on this package.</span>';
+  var notes = {
+    clean: 'The checking script confirms every file is exactly as recorded and the event chain has no gaps.',
+    edit: 'One extra file was added to the folder. The script catches it and says not to rely on the package.'
+  };
+  var out = document.getElementById('out'), note = document.getElementById('out-note');
+  var a = document.getElementById('btn-clean'), b = document.getElementById('btn-edit');
+  function show(which) {
+    out.innerHTML = which === 'clean' ? clean : changed;
+    note.textContent = notes[which];
+    a.setAttribute('aria-pressed', which === 'clean');
+    b.setAttribute('aria-pressed', which === 'edit');
+  }
+  a.addEventListener('click', function () { show('clean'); });
+  b.addEventListener('click', function () { show('edit'); });
+  show('clean');
+})();
+</script>
+</body>
+</html>

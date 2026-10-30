@@ -1,0 +1,10 @@
+{
+  "manifest_version": 2,
+  "name": "TOL observer",
+  "version": "0.4.7",
+  "description": "Observer only. Records, for each request, the host it went to, the page host, a time, and whether the browser sent the Sec-GPC signal. Reads no content, blocks and changes nothing.",
+  "permissions": ["webRequest", "<all_urls>", "nativeMessaging"],
+  "background": { "scripts": ["background.js"] },
+  "browser_action": { "default_title": "TOL observer", "default_area": "navbar" },
+  "browser_specific_settings": { "gecko": { "id": "tol-observer@tol.local" } }
+}

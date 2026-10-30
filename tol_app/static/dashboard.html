@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOL Live Activity</title>
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --ink: #14181f; --muted: #5b6573; --line: #e3e7ed;
+  --accent: #1f6feb; --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e;
+  --ok-bg: #dafbe1; --warn-bg: #fff8c5; --bad-bg: #ffebe9; --info-bg: #ddf4ff; --chip: #eef1f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --card: #161b22; --ink: #e6edf3; --muted: #8b949e; --line: #2b323c;
+    --accent: #58a6ff; --ok: #3fb950; --warn: #d29922; --bad: #f85149;
+    --ok-bg: #0f2a1a; --warn-bg: #2d2408; --bad-bg: #3a1417; --info-bg: #0c2d4a; --chip: #212833;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 15px; margin: 0 0 10px; }
+.sub { color: var(--muted); font-size: 13px; }
+.live { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 13px;
+  padding: 4px 10px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 600; }
+.live.off { background: var(--bad-bg); color: var(--bad); }
+.quit { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--muted); }
+.quit:hover { color: var(--bad); border-color: var(--bad); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.tile, .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.tile { padding: 12px 14px; }
+.tile .v { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.tile .l { color: var(--muted); font-size: 12.5px; }
+.card { padding: 14px 16px; margin-bottom: 18px; }
+.alert { display: flex; gap: 10px; padding: 9px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+.alert.HIGH { background: var(--bad-bg); } .alert.MEDIUM { background: var(--warn-bg); }
+.alert.INFO { background: var(--info-bg); }
+.alert .sev { font-weight: 700; font-size: 12px; min-width: 56px; }
+.alert.HIGH .sev { color: var(--bad); } .alert.MEDIUM .sev { color: var(--warn); } .alert.INFO .sev { color: var(--accent); }
+.alert .t { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 6px 10px;
+  border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+.name { font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sm { color: var(--muted); font-size: 12.5px; word-break: break-all; }
+.badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+.badge.verified { background: var(--ok-bg); color: var(--ok); }
+.badge.likely { background: var(--info-bg); color: var(--accent); }
+.badge.hostname { background: var(--info-bg); color: var(--accent); }
+.badge.network-only { background: var(--warn-bg); color: var(--warn); }
+.badge.none { background: var(--bad-bg); color: var(--bad); }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
+.pulse.active { background: var(--ok); }
+.empty { color: var(--muted); padding: 28px 8px; text-align: center; }
+.notices { color: var(--muted); font-size: 12.5px; margin: 0; padding-left: 18px; }
+.notices li { margin-bottom: 4px; }
+
+.btn { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.rec { color: var(--bad); border-color: var(--bad); font-weight: 600; }
+.btn.recording { background: var(--bad); border-color: var(--bad); color: #fff; }
+.recbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+.recbar a { color: var(--accent); }
+.recdot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); animation: blink 1.2s infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+/* compact / side-view layout: toggled by the Mini button, ?view=compact, or a narrow window */
+body.compact .wrap { padding: 10px 10px 24px; }
+body.compact h1 { font-size: 15px; }
+body.compact .sub, body.compact #notices-card, body.compact thead, body.compact .hide-compact { display: none; }
+body.compact .tiles { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+body.compact .tile { padding: 8px 10px; } body.compact .tile .v { font-size: 16px; }
+body.compact .card { padding: 10px; margin-bottom: 10px; }
+body.compact table, body.compact tbody, body.compact tr, body.compact td { display: block; width: 100%; }
+body.compact tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+body.compact td { padding: 0; border: 0; text-align: left !important; }
+body.compact td.n { display: inline; font-size: 12px; color: var(--muted); margin-right: 8px; }
+body.compact td.n::before { content: attr(data-l) " "; }
+body.compact td.proc { font-size: 12px; color: var(--muted); }
+body.compact header { gap: 6px; margin-bottom: 10px; }
+body.compact .live { margin-left: 0; }
+.rcpt-btn { font: inherit; font-size: 11.5px; padding: 1px 9px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--accent); background: transparent; color: var(--accent); }
+.proof { color: var(--ok); } .proof.noproof { color: var(--warn); }
+.rcpt-btn:disabled { opacity: .6; cursor: wait; }
+.rcpt dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0; font-size: 13.5px; }
+.rcpt dt { color: var(--muted); } .rcpt dd { margin: 0; word-break: break-word; }
+.rcpt .warn { background: var(--warn-bg); color: var(--warn); padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+.rcpt .row { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+
+body.compact td.n { white-space: normal; display: inline-block; width: auto; margin: 2px 10px 0 0; }
+body.compact .btn, body.compact .quit { font-size: 12px; padding: 3px 9px; }
+body.compact select.btn { max-width: 140px; }
+body.compact .tiles { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+body.compact .tile { padding: 6px 8px; }
+body.compact .tile .v { font-size: 14px; }
+body.compact .tile .l { font-size: 10.5px; line-height: 1.2; }
+body.compact h1 { font-size: 14px; line-height: 1.25; }
+body.compact .name { font-size: 14px; }
+body.compact .proof { font-size: 11.5px; }
+body.narrow #mini { display: none; }          /* a narrow window is always compact: no toggle to get wrong */
+@media (max-width: 380px) { body.compact .tiles { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>TOL: who your device is sending data to</h1>
+      <div class="sub" id="uptime">Starting…</div>
+      <div class="sub" id="autostat" hidden></div>
+    </div>
+    <span class="live" id="live"><span class="dot"></span><span id="livetext">Live</span></span>
+    <select class="btn" id="recmin" title="Stop recording automatically">
+      <option value="0">No auto-stop</option><option value="5">Stop after 5 min</option>
+      <option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hour</option>
+    </select>
+    <button class="btn rec" id="rec" type="button">● Record</button>
+    <button class="btn" id="auto" type="button" title="Look up every new destination automatically">Auto-identify: Off</button>
+    <button class="btn" id="idall" type="button" title="Look up every unidentified address, one lookup per network block">Identify all</button>
+    <button class="btn" id="mini" type="button" title="Switch to a small side-view layout">Mini view</button>
+    <button class="btn" id="snap" type="button" hidden title="Move this window to the other side of the screen">Snap ⇄</button>
+    <button class="btn hide-compact" id="popout" type="button" title="Open a small separate window to keep beside your work">Pop out</button>
+    <button class="quit" id="quit" type="button">Quit TOL</button>
+  </header>
+
+  <div class="tiles">
+    <div class="tile"><div class="v" id="t-sent">0 B</div><div class="l">Sent since start</div></div>
+    <div class="tile"><div class="v" id="t-recv">0 B</div><div class="l">Received since start</div></div>
+    <div class="tile"><div class="v" id="t-dest">0</div><div class="l">Destinations</div></div>
+    <div class="tile"><div class="v" id="t-alerts">0</div><div class="l">Alerts</div></div>
+  </div>
+
+  <div class="card" id="recbar-card" hidden>
+    <div class="recbar" id="recbar"></div>
+  </div>
+
+  <div class="card" id="site-card" hidden>
+    <div class="row"><h2>Site report</h2>
+      <span><select class="btn" id="site-page" title="A page the browser extension saw in the last recording"></select>
+      <a id="site-dl" href="#" download>Download (.txt)</a></span></div>
+    <p class="sm" id="site-sum"></p>
+    <div id="site-body"></div>
+    <p class="sm">Lists what was observed: where a page's requests went, and whether the browser sent the privacy signal. It does not say any request was unlawful, unwanted or in breach of anything. A label is usually who runs the servers, shown with its confidence. No content was read.</p>
+  </div>
+
+  <div class="card rcpt" id="rcpt-card" hidden>
+    <div class="row"><h2 id="rcpt-title">Receipt</h2>
+      <span><a id="rcpt-dl" href="/api/receipts.json" download>Download all receipts (.json)</a>
+      <button class="btn" id="rcpt-close" type="button">Close</button></span></div>
+    <div id="rcpt-body"></div>
+  </div>
+
+  <div class="card" id="alerts-card" hidden>
+    <h2>Alerts</h2>
+    <div id="alerts"></div>
+  </div>
+
+  <div class="card">
+    <h2>Destinations</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Destination</th><th>Process</th>
+          <th class="n">Sent (last min)</th><th class="n">Rate</th>
+          <th class="n">Total sent</th><th class="n">Total received</th><th class="n">Last seen</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="empty">Watching. Destinations appear here as soon as your device sends data.</div>
+  </div>
+
+  <div class="card" id="obs-card">
+    <div class="row"><h2>Browser observer (optional, Firefox)</h2>
+      <button class="btn" id="obs-setup" type="button">Set up</button></div>
+    <p class="sm">Lets TOL record which hosts a page's requests went to and whether Firefox sent the privacy signal, only while you record.
+      It keeps the host, the page host, the time and a yes/no. It reads no content and blocks nothing.
+      Firefox runs it only in normal windows unless you allow it in private ones (Settings, Extensions, TOL observer). Its toolbar button shows a number when it works and a red ! when it cannot reach TOL.</p>
+    <div id="obs-steps" class="sm" hidden></div>
+  </div>
+
+  <div class="card" id="notices-card">
+    <h2>About this view</h2>
+    <ul class="notices" id="notices"></ul>
+  </div>
+</div>
+
+<script>
+const BADGE = {
+  "verified": "Verified", "likely": "Likely", "hostname": "Hostname confirmed", "network-only": "Network owner only", "none": "Unidentified"
+};
+const $ = (id) => document.getElementById(id);
+
+function bytes(n) {
+  const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0;
+  while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+  return (i === 0 ? n.toFixed(0) : n.toFixed(1)) + " " + u[i];
+}
+function ago(seconds) {
+  if (seconds < 2) return "now";
+  if (seconds < 60) return Math.floor(seconds) + "s ago";
+  if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+  return Math.floor(seconds / 3600) + "h ago";
+}
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;   // textContent only: hostnames are untrusted
+  return e;
+}
+
+function badgeOf(r) {
+  const have = r.receipt_ip ? receipts[r.receipt_ip] : null;
+  return (r.confidence === "none" && have && have.owner) ? "network-only" : r.confidence;
+}
+
+function render(s) {
+  lastNow = s.now;
+  receipts = s.receipts || {};
+  $("uptime").textContent = "Watching for " + ago(s.uptime).replace(" ago", "") +
+    (s.collector_errors ? " · " + s.collector_errors + " read errors" : "");
+  if (s.version) $("ver").textContent = "TOL " + s.version;
+  const known = s.bytes_known !== false, B = (v) => known ? bytes(v) : "n/a";
+  $("t-sent").textContent = B(s.totals.sent);
+  $("t-recv").textContent = B(s.totals.received);
+  $("t-dest").textContent = s.rows.length;
+  $("t-alerts").textContent = s.alerts.length;
+
+  const alerts = $("alerts"); alerts.replaceChildren();
+  $("alerts-card").hidden = s.alerts.length === 0;
+  for (const a of s.alerts.slice(0, 8)) {
+    const row = el("div", "alert " + a.severity);
+    row.append(el("span", "sev", a.severity), el("span", "", a.message), el("span", "t", ago(s.now - a.time)));
+    alerts.append(row);
+  }
+
+  const body = $("rows"); body.replaceChildren();
+  $("empty").hidden = s.rows.length > 0;
+  for (const r of s.rows) {
+    const tr = document.createElement("tr");
+    const dest = document.createElement("td");
+    const name = el("div", "name");
+    name.append(el("span", "pulse" + (r.active ? " active" : "")), el("span", "", r.name),
+      el("span", "badge " + badgeOf(r), BADGE[badgeOf(r)] || badgeOf(r)));
+    dest.append(name);
+    const detail = r.hostnames.length ? r.hostnames.join(", ") : r.endpoints.join(", ");
+    dest.append(el("div", "sm", detail + (r.endpoint_count > r.endpoints.length ? " +" + (r.endpoint_count - r.endpoints.length) + " more" : "")));
+    if (r.source !== "local" && r.endpoints.length) {
+      const ip = ipOf(r.endpoints[0]), rip = r.receipt_ip, have = rip ? receipts[rip] : null;
+      const b = el("button", "rcpt-btn", have ? "View receipt" : "Identify");
+      b.type = "button"; b.title = "Find out who owns this address and save the evidence";
+      b.addEventListener("click", () => have ? openReceipt(rip) : identify(ip, b));
+      const line = el("div", "sm proof" + (have && !have.owner ? " noproof" : ""));
+      if (have) {
+        const bits = [have.owner ? "Registered to: " + have.owner : "The registry has no record for this address"];
+        if (have.network.length) bits.push("block " + have.network.join(", "));
+        bits.push(have.ptr ? (have.ptr_confirmed ? "name confirmed: " + have.ptr : "name NOT confirmed") : "no reverse DNS");
+        if (have.sha256) bits.push("record " + have.sha256.slice(0, 12) + "…");
+        bits.push("looked up " + have.queried_at.replace("T", " ").replace("Z", " UTC"));
+        if (rip !== ip) bits.push("same network block as " + rip);
+        line.append(document.createTextNode(bits.join(" · ") + "  "));
+      }
+      line.append(b);
+      dest.append(line);
+    }
+    const num = (label, text) => { const td = el("td", "n", text); td.dataset.l = label; return td; };
+    tr.append(dest, el("td", "proc", r.process),
+      num("Last min:", B(r.sent_recent)), num("Rate:", r.send_rate > 0 ? bytes(r.send_rate) + "/s" : "–"),
+      num("Sent:", B(r.total_sent)), num("Received:", B(r.total_received)),
+      num("Seen:", ago(s.now - r.last_seen)));
+    body.append(tr);
+  }
+
+  renderAuto(s.auto_identify);
+  if (s.recording) renderRecording(s.recording);
+
+  const n = $("notices"); n.replaceChildren();
+  for (const t of s.notices || []) n.append(el("li", "", t));
+}
+
+$("quit").addEventListener("click", async () => {
+  if (!confirm("Stop TOL? It will stop watching until you open it again.")) return;
+  try { await fetch("/api/quit", { method: "POST", headers: { "X-TOL": "1" } }); } catch (e) {}
+  stopped = true;
+  $("live").classList.add("off"); $("livetext").textContent = "Stopped. You can close this tab.";
+  $("quit").hidden = true;
+});
+
+// --- compact / side view ------------------------------------------------------
+// Compact when: the pop-out URL asks for it, the user chose Mini view, or the window is narrow (<= 760 px).
+const narrowQuery = window.matchMedia("(max-width: 760px)");
+let wantCompact = false;
+function applyCompact() {
+  const narrow = narrowQuery.matches;
+  document.body.classList.toggle("narrow", narrow);
+  const on = narrow || wantCompact;
+  document.body.classList.toggle("compact", on);
+  $("mini").textContent = on ? "Full view" : "Mini view";
+}
+function setCompact(on, remember) {
+  wantCompact = on;
+  if (remember) { try { localStorage.setItem("tol_compact", on ? "1" : "0"); } catch (e) {} }
+  applyCompact();
+}
+const MINI = new URLSearchParams(location.search).get("mini") === "1";   // this is the small window TOL started
+(function () {
+  let saved = null; try { saved = localStorage.getItem("tol_compact"); } catch (e) {}
+  const forced = MINI || new URLSearchParams(location.search).get("view") === "compact";
+  wantCompact = forced || saved === "1";
+  applyCompact();
+  (narrowQuery.addEventListener ? narrowQuery.addEventListener("change", applyCompact) : narrowQuery.addListener(applyCompact));
+})();
+$("mini").addEventListener("click", () => setCompact(!wantCompact, true));
+$("popout").addEventListener("click", async () => {
+  const x = Math.max(screen.availWidth - 370, 0);
+  // 1) best: TOL starts a small browser window itself (a size the browser cannot ignore)
+  try {
+    const res = await fetch("/api/popout?x=" + x + "&y=40", { method: "POST", headers: { "X-TOL": "1" } });
+    const body = await res.json();
+    if (res.ok && body.launched) {
+      if (body.already_open) { const b = $("popout"), t = b.textContent; b.textContent = "Already open"; setTimeout(() => { b.textContent = t; }, 2000); }
+      return;
+    }
+  } catch (e) {}
+  // 2) fallback: ask this browser for a small pop-up (some browsers ignore the size)
+  window.open("/?view=compact", "tol-mini", "popup=yes,width=360,height=600,left=" + x + ",top=40");
+});
+if (new URLSearchParams(location.search).get("view") === "compact") {
+  window.name = "tol-mini";
+  if (window.opener) $("snap").hidden = false;   // a page can only move a window it opened itself
+}
+$("snap").addEventListener("click", () => {
+  const atRight = window.screenX > screen.availWidth / 2;
+  try { window.moveTo(atRight ? 0 : screen.availWidth - window.outerWidth, 40); } catch (e) {}
+});
+
+// --- auto-identify: background lookups of new destinations (off until the user agrees) -----------------
+let autoOn = false;
+$("auto").addEventListener("click", async () => {
+  if (!autoOn && !confirm("Turn on Auto-identify?\n\nTOL will look up each new destination automatically, in the background, and save a receipt for it. Each lookup sends that IP address (never your traffic or its contents) to the public RDAP/WHOIS service.\n\nOne lookup covers a whole network block, and it stays on until you turn it off.")) return;
+  try { await fetch("/api/auto-identify?enabled=" + (autoOn ? "0" : "1") + "&consent=1", { method: "POST", headers: { "X-TOL": "1" } }); } catch (e) {}
+  poll();
+});
+function renderAuto(a) {
+  const stat = $("autostat");
+  if (!a) { $("auto").hidden = true; stat.hidden = true; return; }
+  autoOn = a.enabled;
+  $("auto").textContent = "Auto-identify: " + (a.enabled ? "On" : "Off");
+  $("auto").classList.toggle("recording", a.enabled);
+  stat.hidden = !a.enabled;
+  if (a.enabled) {
+    stat.textContent = "Auto-identify on: " + a.looked_up + " looked up, " + a.waiting + " waiting" +
+      (a.failing ? ", " + a.failing + " could not be looked up (will retry)" : "") +
+      (a.rate_limited ? " (paused: hourly limit reached)" : "") + (a.last_error ? " · last problem: " + a.last_error : "");
+  }
+}
+
+// --- recording ---------------------------------------------------------------
+async function recPost(action) {
+  const q = action === "start" ? "?minutes=" + $("recmin").value : "";
+  try { await fetch("/api/record/" + action + q, { method: "POST", headers: { "X-TOL": "1" } }); } catch (e) {}
+  poll();
+}
+$("rec").addEventListener("click", () => recPost($("rec").classList.contains("recording") ? "stop" : "start"));
+
+// --- browser observer setup ---------------------------------------------------------------------------------
+$("obs-setup").addEventListener("click", async () => {
+  const box = $("obs-steps"); box.replaceChildren(); box.hidden = false;
+  let r = null;
+  try { r = await (await fetch("/api/browser-helper/install", { method: "POST", headers: { "X-TOL": "1" } })).json(); } catch (e) {}
+  if (!r || !r.extension_dir) { box.textContent = "Could not set this up" + (r && r.error ? ": " + r.error : "."); return; }
+  box.append(el("div", "", "The helper is installed. Now, in Firefox:"));
+  for (const t of ["1. Open about:debugging, then click This Firefox.",
+                   "2. Click Load Temporary Add-on and choose manifest.json in this folder:",
+                   r.extension_dir,
+                   "3. Press Record here, browse, press Stop. The Site report card appears below.",
+                   "Firefox forgets a temporary add-on when it quits, so step 2 is repeated each time until a signed version is available."]) {
+    box.append(el(t === r.extension_dir ? "code" : "div", "", t));
+  }
+});
+
+// --- site report: what the browser extension saw in the last recording --------------------------------------
+let sitePagesFor = null;
+async function loadSitePages(path) {
+  sitePagesFor = path;
+  let pages = [];
+  try { pages = (await (await fetch("/api/site-report")).json()).pages || []; } catch (e) {}
+  $("site-card").hidden = !pages.length;
+  const sel = $("site-page"); sel.replaceChildren();
+  for (const p of pages) sel.append(el("option", "", p.page + " (" + (p.with_signal + p.without_signal) + " requests)"));
+  sel.dataset.pages = JSON.stringify(pages.map((p) => p.page));
+  if (pages.length) showSite(pages[0].page);
+}
+async function showSite(page) {
+  $("site-dl").href = "/api/site-report?format=text&page=" + encodeURIComponent(page);
+  let r = null;
+  try { r = await (await fetch("/api/site-report?page=" + encodeURIComponent(page))).json(); } catch (e) {}
+  const body = $("site-body"); body.replaceChildren();
+  if (!r || !r.destinations) { $("site-sum").textContent = "Could not load this report."; return; }
+  const w = r.destinations.reduce((n, d) => n + d.with_signal, 0), wo = r.destinations.reduce((n, d) => n + d.without_signal, 0);
+  const lab = r.destinations.filter((d) => d.owner).length;
+  $("site-sum").textContent = page + ": requests went to " + r.destinations.length + " host(s). " + w + " carried the privacy signal, " +
+    wo + " did not. TOL has an ownership label for " + lab + " of them.";
+  const t = el("table"); const h = el("tr");
+  for (const c of ["Host", "With signal", "Without", "Ownership label (confidence)"]) h.append(el("th", "", c));
+  t.append(h);
+  for (const d of r.destinations) {
+    const tr = el("tr");
+    tr.append(el("td", "", d.host), el("td", "", String(d.with_signal)), el("td", "", String(d.without_signal)),
+      el("td", "", d.owner ? d.owner + " (" + d.confidence + ")" : (d.address_name ? "no ownership label; the address's own name is " + d.address_name : "no label")));
+    t.append(tr);
+  }
+  body.append(t);
+}
+$("site-page").addEventListener("change", () => {
+  const pages = JSON.parse($("site-page").dataset.pages || "[]");
+  if (pages[$("site-page").selectedIndex]) showSite(pages[$("site-page").selectedIndex]);
+});
+
+function renderRecording(rec) {
+  const lastJson = rec.last && rec.last.json ? rec.last.json : null;
+  if (!rec.active && lastJson !== sitePagesFor) loadSitePages(lastJson);
+  const btn = $("rec"), bar = $("recbar"); bar.replaceChildren();
+  btn.classList.toggle("recording", rec.active);
+  btn.classList.toggle("rec", !rec.active);
+  btn.textContent = rec.active ? "■ Stop recording" : "● Record";
+  const show = rec.active || (rec.last && (rec.last.json || rec.last.csv));
+  $("recbar-card").hidden = !show;
+  if (rec.active) {
+    const left = rec.ends ? " Auto-stops in " + Math.max(Math.ceil((rec.ends - lastNow) / 60), 0) + " min." : "";
+    bar.append(el("span", "recdot"), el("span", "", "Recording… " + rec.events + " connection samples captured." + left + " Press Stop to save a file."));
+  } else if (rec.last) {
+    bar.append(el("span", "", "Saved " + rec.last.events + " samples."));
+    for (const [kind, label] of [["json", "Download full report (.json)"], ["csv", "Download summary (.csv)"]]) {
+      if (!rec.last[kind]) continue;
+      const a = el("a", "", label); a.href = "/api/recording/download?kind=" + kind; a.download = "";
+      bar.append(a);
+    }
+    if (rec.last.zip) {
+      const a = el("a", "", "Download evidence package (.zip)"); a.href = "/api/recording/download?kind=zip"; a.download = "";
+      bar.append(a);
+      if (rec.last.timestamp) {
+        bar.append(el("span", "proof", "Trusted timestamp: " + rec.last.timestamp.gen_time_utc.replace("T", " ").replace("Z", " UTC") +
+          ", signed by " + hostOf(rec.last.timestamp.tsa_url)));
+      } else {
+        const tb = el("button", "btn", "Add trusted timestamp");
+        tb.type = "button"; tb.title = "Have an independent timestamp authority sign the time of this package";
+        tb.addEventListener("click", () => addTimestamp(tb, rec.tsa_url));
+        bar.append(tb);
+      }
+    } else if (rec.last.json) {
+      const b = el("button", "btn", "Create evidence package");
+      b.type = "button"; b.title = "Bundle this recording, receipts, hashes and a verifier script into one zip";
+      b.addEventListener("click", async () => {
+        b.disabled = true; b.textContent = "Building…";
+        try { await fetch("/api/evidence", { method: "POST", headers: { "X-TOL": "1" } }); } catch (e) {}
+        poll();
+      });
+      bar.append(b);
+    }
+    if (rec.last.json) bar.append(el("span", "sm", "Also saved at " + rec.last.json));
+  }
+}
+
+// --- receipts: who owns this address, with the evidence saved ------------------
+let receipts = {};
+function ipOf(endpoint) { return endpoint.slice(0, endpoint.lastIndexOf(":")); }
+async function identify(ip, btn) {
+  if (!receipts[ip] && !confirm("Look up " + ip + " in public registries?\n\nThis sends that address (not your data) to the public RDAP/WHOIS service and saves the result as a receipt.")) return;
+  btn.disabled = true; btn.textContent = "Looking up…";
+  try {
+    const res = await fetch("/api/receipt?ip=" + encodeURIComponent(ip), { method: "POST", headers: { "X-TOL": "1" } });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || res.status);
+    showReceipt(body);
+  } catch (e) { btn.textContent = "Lookup failed. Retry"; btn.title = String(e.message || e); btn.disabled = false; alert("The lookup could not be made, so nothing was saved.\n\nReason: " + (e.message || e)); return; }
+  poll();
+}
+function showReceipt(r) {
+  const body = $("rcpt-body"); body.replaceChildren();
+  $("rcpt-title").textContent = "Receipt for " + r.ip;
+  const rd = r.rdap || {}, dns = r.reverse_dns || {}, act = r.activity;
+  const dl = el("dl");
+  const add = (k, v) => { if (v === undefined || v === null || v === "" ) return; dl.append(el("dt", "", k), el("dd", "", String(v))); };
+  add("Registered holder", rd.registrant || rd.name || "No record found");
+  add("Network block", (rd.cidrs || []).join(", ") + (rd.start ? "  (" + rd.start + " – " + rd.end + ")" : ""));
+  add("Network name / handle", [rd.name, rd.handle].filter(Boolean).join(" / "));
+  add("Country on record", rd.country);
+  add("Registered", (rd.events || {}).registration);
+  add("Last changed", (rd.events || {})["last changed"]);
+  add("Reverse DNS", dns.name ? dns.name + (dns.forward_confirmed ? "  (confirmed: the name resolves back to this address)" : "  (NOT confirmed: the name does not resolve back, do not rely on it)") : "none");
+  if (act) {
+    add("This device sent", bytes(act.bytes_sent)); add("This device received", bytes(act.bytes_received));
+    add("Programs", act.processes.join(", ")); add("Ports", act.ports.join(", "));
+    add("First seen", new Date(act.first_seen * 1000).toLocaleString());
+    add("Last seen", new Date(act.last_seen * 1000).toLocaleString());
+  }
+  add("Looked up", r.queried_at_iso + " (" + r.clock + ")");
+  add("Source", rd.source_url);
+  add("Record SHA-256", rd.sha256);
+  add("Receipt # in chain", r.seq);
+  body.append(dl, el("div", "warn", r.caveat));
+  $("rcpt-card").hidden = false; $("rcpt-card").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("rcpt-close").addEventListener("click", () => { $("rcpt-card").hidden = true; });
+async function openReceipt(ip) {
+  const res = await fetch("/api/receipt?ip=" + encodeURIComponent(ip), { method: "POST", headers: { "X-TOL": "1" } });
+  if (res.ok) showReceipt(await res.json());
+}
+
+// Identify all: one lookup per network block. Each saved receipt labels the rest of its block, so we re-read the
+// state after every lookup and only ask about addresses that are still unidentified.
+let identifying = false;
+$("idall").addEventListener("click", async () => {
+  if (identifying) { identifying = false; return; }
+  const state = await (await fetch("/api/state", { cache: "no-store" })).json();
+  const todo = (st) => st.rows.filter(r => r.source !== "local" && !r.receipt_ip && r.endpoints.length && r.confidence !== "verified");
+  const n = todo(state).length;
+  if (!n) { alert("Nothing left to identify."); return; }
+  if (!confirm("Look up unidentified addresses (up to " + n + ", fewer if they share network blocks)?\n\nThis sends each address, not your data, to the public RDAP/WHOIS service and saves a receipt for each. Click Identify all again to stop.")) return;
+  identifying = true; let done = 0, failed = 0;
+  const btn = $("idall");
+  while (identifying && done + failed < 60) {
+    const st = await (await fetch("/api/state", { cache: "no-store" })).json();
+    const next = todo(st).find(r => !skipped.has(ipOf(r.endpoints[0])));
+    if (!next) break;
+    const ip = ipOf(next.endpoints[0]);
+    btn.textContent = "Stop (" + done + " done)";
+    try {
+      const res = await fetch("/api/receipt?ip=" + encodeURIComponent(ip), { method: "POST", headers: { "X-TOL": "1" } });
+      if (!res.ok) throw new Error(res.status);
+      done++;
+    } catch (e) { failed++; skipped.add(ip); }
+    await new Promise(r => setTimeout(r, 700));
+  }
+  identifying = false; btn.textContent = "Identify all"; poll();
+});
+const skipped = new Set();
+
+// --- trusted timestamp: an independent authority signs the time of the evidence package -------------------
+function hostOf(u) { try { return new URL(u).host; } catch (e) { return u; } }
+async function addTimestamp(btn, url) {
+  if (!confirm("Add a trusted timestamp?\n\nTOL will send ONE fingerprint (a 32-byte SHA-256 hash of the package's file list, not any of your data and not the files themselves) to " + hostOf(url) +
+    ". It signs back the time. After that, the time of this package no longer depends on your Mac's clock.\n\nYou can choose a different authority in ~/.tol/settings.json (tsa_url).")) return;
+  btn.disabled = true; btn.textContent = "Asking " + hostOf(url) + "…";
+  try {
+    const res = await fetch("/api/evidence/timestamp?consent=1", { method: "POST", headers: { "X-TOL": "1" } });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || res.status);
+  } catch (e) {
+    alert("The timestamp could not be added, so nothing was changed.\n\nReason: " + (e.message || e));
+    btn.disabled = false; btn.textContent = "Add trusted timestamp";
+    return;
+  }
+  poll();
+}
+
+let failures = 0, stopped = false, lastNow = 0;
+async function poll() {
+  if (stopped) return;
+  try {
+    const res = await fetch("/api/state", { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    render(await res.json());
+    failures = 0;
+    $("live").classList.remove("off"); $("livetext").textContent = "Live";
+  } catch (e) {
+    if (++failures >= 2) { $("live").classList.add("off"); $("livetext").textContent = "Disconnected"; }
+  }
+}
+poll(); setInterval(poll, 1000);
+</script>
+<p class="sub" id="ver" style="text-align:center;margin:18px 0 8px"></p>
+</body>
+</html>
