@@ -7,8 +7,6 @@ It can look up who holds an address, and it can save a record with an independen
 
 **TOL shows. It does not block, judge, or promise privacy.** Please read [what TOL can and cannot prove](docs/WHY-TRUST.md) first.
 
-<!-- Add a real screenshot here before launch: ![TOL dashboard](docs/images/dashboard.png). Real screenshots only; no mock-ups. -->
-
 ## Download (v0.4.7, pre-release)
 Get the files from the [Releases page](https://github.com/rickwatson5166/TOL-public/releases): Mac (Apple silicon or Intel). **Windows is coming soon.**
 
