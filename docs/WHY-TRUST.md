@@ -39,7 +39,7 @@ Verified), and a report never says anyone broke a rule. See `docs/SCOPE.md` and 
 ## What is not in place yet (so you know)
 
 - **No outside review.** Nobody independent has read the code or tested the method yet. That is the most important gap.
-- **Unsigned apps.** The Mac and Windows downloads are not yet signed, so your system will warn you before opening them.
+- **Unsigned apps.** The Mac downloads are not yet signed, so your system will warn you before opening them.
   A signed release and a published checksum for each download are planned. Until then, build it from source if you prefer.
 - **Early software.** Tested so far on one Intel Mac with Firefox. Windows, Chrome, Edge and Apple-silicon Macs are not yet
   tested on real machines.
