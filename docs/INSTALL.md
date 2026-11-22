@@ -12,11 +12,14 @@ time. The steps below get past it. Nothing here installs a driver or changes you
 4. If macOS still refuses: **System Settings > Privacy & Security**, scroll down, press **Open Anyway** next to TOL.
 5. Your browser opens with the TOL window. To stop TOL, press **Quit TOL** in that window.
 
-## Windows: coming soon
+## Windows 10 / 11
 
-A Windows build exists and passes automated tests on GitHub's Windows machines, but nobody has run it on a real PC yet. It is not offered for download
-until that has been done. Windows will show each connection and the program that made it, but not how much data it carried (Windows does not share
-that with ordinary programs), so amounts will show as n/a.
+1. Download `TOL-windows-x64.zip` from the Releases page, right-click it, choose **Extract All**.
+2. Open the extracted **TOL** folder. To see how much data each connection carried, right-click **TOL.exe** and choose **Run as administrator**; Windows does not give byte counts to ordinary programs, so a normal double-click shows connections and programs with amounts as n/a (TOL says which mode it is in when it starts). Counting starts when TOL first sees a connection.
+3. If Windows says "Windows protected your PC" (the app is not signed yet): press **More info**, then **Run anyway**.
+4. A black window stays open while TOL runs and your browser opens the TOL window. **Quit TOL** in the browser, or closing the black window, stops it.
+
+Tested by hand on one Windows 11 PC so far. If something fails for you, please open an issue and include what `tol --diagnose` prints.
 
 ## Linux
 
@@ -50,5 +53,5 @@ program is safe: for that, the source is in this repository, and the apps are bu
 
 ## Status, stated plainly
 Tested by hand on one Intel Mac. The Apple-silicon build passes automated tests on GitHub's machines but has not yet been tried by a person on that
-hardware. Windows is coming soon: its build passes automated tests but has not been run on a real PC, so it is not offered yet. If something fails for you, please open an issue and include what `tol --diagnose` prints.
+hardware. Windows has been run by hand on one Windows 11 PC (amounts need Administrator). If something fails for you, please open an issue and include what `tol --diagnose` prints.
 

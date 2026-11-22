@@ -56,8 +56,8 @@ def notices(lookups: bool, platform=None) -> list:
                "that sends destination IPs to public registries.")
     out.append("Know a vendor? Add its IP range or hostname to ~/.tol/registry.json and it shows as Verified.")
     if platform.startswith("win"):
-        limit = ("On Windows it lists connections and the program that opened each one, but not how much data each "
-                 "carried (Windows does not share that), so amounts show as n/a. It misses connections that open and "
+        limit = ("On Windows it lists connections and the program that opened each one, but how much data each "
+                 "carried only when TOL is started as Administrator (otherwise amounts show as n/a). It misses connections that open and "
                  "close between two checks, and UDP/QUIC.")
     elif platform.startswith("linux"):
         limit = "It does not see UDP/QUIC traffic or connections shorter than one second."
@@ -190,9 +190,17 @@ def main(argv=None) -> int:
         collector = Collector(include_loopback=args.loopback, resolver=Resolver(), labeler=labeler.label,
                               reader=read_mac_sockets, owners=None)
     elif sys.platform == "win32":
-        from tol_collector_win import read_windows_sockets
-        collector = Collector(include_loopback=args.loopback, resolver=Resolver(), labeler=labeler.label,
-                              reader=read_windows_sockets, owners=None, presence_only=True)
+        from tol_collector_win import BytesReader, read_windows_sockets
+        bytes_reader = BytesReader()
+        if bytes_reader.available:
+            print("Windows: running as Administrator, so TOL counts bytes per connection.", flush=True)
+            collector = Collector(include_loopback=args.loopback, resolver=Resolver(), labeler=labeler.label,
+                                  reader=bytes_reader.read, owners=None)
+        else:
+            print("Windows: byte counts are n/a (" + (bytes_reader.error or "unavailable") + "). To count bytes, "
+                  "close TOL and start it again from an Administrator PowerShell.", flush=True)
+            collector = Collector(include_loopback=args.loopback, resolver=Resolver(), labeler=labeler.label,
+                                  reader=read_windows_sockets, owners=None, presence_only=True)
     else:
         collector = Collector(include_loopback=args.loopback, resolver=Resolver(), labeler=labeler.label)
     engine = Engine(collector, data_dir=args.data_dir)

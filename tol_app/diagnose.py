@@ -40,7 +40,11 @@ def diagnose(out=print) -> bool:
         out(f"PowerShell returned {len(raw)} characters. First 300:")
         out("  | " + raw[:300].replace("\n", " "))
         socks = parse_connections(raw)
-        out(f"parsed {len(socks)} connections (Windows gives no byte counts); first 5:")
+        from tol_collector_win import BytesReader
+        br = BytesReader()
+        out("byte counts: " + ("ON (running as Administrator)" if br.available else
+                                f"n/a ({br.error}); start TOL from an Administrator PowerShell to count bytes"))
+        out(f"parsed {len(socks)} connections; first 5:")
         for s in socks[:5]:
             out(f"  {s['process']}({s['pid']}) {s['dst']}:{s['dport']} state={s['state']}")
         ok = bool(socks)

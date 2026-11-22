@@ -7,14 +7,13 @@ It can look up who holds an address, and it can save a record with an independen
 
 **TOL shows. It does not block, judge, or promise privacy.** Please read [what TOL can and cannot prove](docs/WHY-TRUST.md) first.
 
-## Download (v0.4.7, pre-release)
-Get the files from the [Releases page](https://github.com/rickwatson5166/TOL-public/releases): Mac (Apple silicon or Intel). **Windows is coming soon.**
+## Download (v0.4.8, pre-release)
+Get the files from the [Releases page](https://github.com/rickwatson5166/TOL-public/releases): Mac (Apple silicon or Intel) and Windows 10/11.
 
 - **The apps are not signed yet.** macOS says "can't be opened": right-click the app, choose Open, then Open. You can check each file against the SHA-256 shown on the release page,
   and everything is built in public by this repository's own workflow.
 - **Honest status:** tested by hand on one Intel Mac. The Apple-silicon build passes automated tests on GitHub's machines but has not yet been
-  tried by a person on that hardware. **Windows is coming soon:** a Windows build passes the same automated tests, but nobody has run it on a real PC
-  yet, so it is not offered for download. Linux works from source.
+  tried by a person on that hardware. **Windows** has been run by hand on one Windows 11 PC. Per-connection amounts need TOL to be started as Administrator (right-click, Run as administrator); otherwise Windows shows each connection and program with amounts as n/a, and TOL says so on screen. Linux works from source.
 - Prefer to run it yourself? See "Run from source" below, or [how to check a download](docs/INSTALL.md#check-your-download). TOL uses only Python's standard library.
 
 ## What it does

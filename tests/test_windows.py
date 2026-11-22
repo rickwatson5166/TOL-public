@@ -93,3 +93,78 @@ def test_a_slow_powershell_reading_is_skipped_not_fatal(monkeypatch):
     eng = Engine(Slow())
     assert eng.tick() == [] and eng.errors == 1                  # counted, and the next tick can try again
     assert eng.tick() == [] and eng.errors == 2
+
+
+# ---- byte counts through the per-connection statistics API (administrator) -------------------------------------
+
+def _fake_api(counters, set_error=0):
+    """Stands in for iphlpapi: counters maps (local port, remote port) -> [out, in], read back through the real
+    ctypes structures, so a wrong struct layout or argument order shows up here."""
+    import ctypes
+    import socket
+    from types import SimpleNamespace
+
+    def port_of(row, which):
+        return socket.ntohs(getattr(row, which) & 0xFFFF)
+
+    def setter(row_ref, kind, rw_ref, ver, size, off):
+        assert kind == 1 and off == 0 and size == 1
+        return set_error
+
+    def getter(row_ref, kind, rw, rwv, rws, ros, rosv, ross, rod_ref, rodv, rods):
+        import tol_collector_win as w
+        assert kind == 1 and rods == ctypes.sizeof(w._DataRod)
+        row = row_ref._obj
+        out, inn = counters[(port_of(row, "local_port"), port_of(row, "remote_port"))]
+        rod = rod_ref._obj
+        rod.data_bytes_out, rod.data_bytes_in = out, inn
+        return 0
+    return SimpleNamespace(set4=setter, set6=setter, get4=getter, get6=getter)
+
+
+def test_row_layout_matches_the_windows_structures():
+    import ctypes
+    import tol_collector_win as w
+    row, ver = w.make_row("192.168.1.20", 50123, "142.250.80.46", 443)
+    assert ver == 4 and ctypes.sizeof(row) == 20 and row.state == 5
+    assert bytes(ctypes.string_at(ctypes.addressof(row) + 4, 4)) == bytes([192, 168, 1, 20])   # network order in memory
+    row6, ver6 = w.make_row("::1", 1, "2607:f8b0:4004::200e", 443)
+    assert ver6 == 6 and ctypes.sizeof(row6) == 52
+    assert ctypes.sizeof(w._DataRod) == 96 and ctypes.sizeof(w._DataRw) == 1
+    with pytest.raises(ValueError):
+        w.make_row("10.0.0.1", 1, "::1", 2)
+
+
+def test_bytes_reader_fills_counts_and_skips_what_it_cannot_read():
+    import tol_collector_win as w
+    socks = parse_connections(SAMPLE)
+    for s in socks:
+        s["bytes_sent"] = s["bytes_received"] = 0
+    counters = {(50123, 443): [1500, 9000], (50300, 443): [10, 20]}
+    r = w.BytesReader(api=_fake_api(counters), admin=True, lister=lambda: socks)
+    assert r.available
+    got = r.read()
+    assert [(s["bytes_sent"], s["bytes_received"]) for s in got][0] == (1500, 9000)
+    assert got[2]["bytes_sent"] == 10                      # IPv6 connection goes through the IPv6 functions
+    # a connection the API refuses is skipped (None), never shown as 0 bytes
+    refusing = w.BytesReader(api=_fake_api(counters, set_error=5), admin=True, lister=lambda: parse_connections(SAMPLE))
+    assert all(s["bytes_sent"] is None for s in refusing.read())
+
+
+def test_bytes_reader_without_admin_is_not_available_and_collector_counts_the_difference():
+    import tol_collector_win as w
+    assert not w.BytesReader(api=_fake_api({}), admin=False).available
+    state = {"n": 0}
+
+    def lister():
+        state["n"] += 1
+        s = parse_connections(SAMPLE)[0]
+        s["bytes_sent"] = s["bytes_received"] = 0
+        return [s]
+    counters = {(50123, 443): [0, 0]}
+    r = w.BytesReader(api=_fake_api(counters), admin=True, lister=lister)
+    c = Collector(reader=r.read, owners=None, resolver=lambda ip: ip)
+    assert c.bytes_known and c.poll(now=1.0) == []        # first poll is the baseline
+    counters[(50123, 443)] = [500, 2500]
+    entries = c.poll(now=3.0)
+    assert len(entries) == 1 and entries[0]["bytes_sent"] == 500 and entries[0]["bytes_received"] == 2500

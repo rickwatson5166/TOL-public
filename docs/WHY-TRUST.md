@@ -41,7 +41,7 @@ Verified), and a report never says anyone broke a rule. See `docs/SCOPE.md` and 
 - **No outside review.** Nobody independent has read the code or tested the method yet. That is the most important gap.
 - **Unsigned apps.** The Mac downloads are not yet signed, so your system will warn you before opening them.
   A signed release and a published checksum for each download are planned. Until then, build it from source if you prefer.
-- **Early software.** Tested so far on one Intel Mac with Firefox. Windows, Chrome, Edge and Apple-silicon Macs are not yet
+- **Early software.** Tested so far on one Intel Mac with Firefox and one Windows 11 PC. Chrome, Edge and Apple-silicon Macs are not yet
   tested on real machines.
 - **Licence.** TOL is released under the Apache License 2.0 (see `LICENSE` and `NOTICE`). The name "TOL" is not licensed for modified versions.
 - **A record can be edited before it is packaged, or fed false input at capture time** by a program running as you. The

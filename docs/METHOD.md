@@ -19,7 +19,7 @@ internet. It only reads what the operating system already reports.
 |---|---|---|---|
 | macOS | `nettop` (ships with macOS) | yes | A connection that opens and closes between two checks can be missed. |
 | Linux | kernel `sock_diag` and `/proc` | yes | TCP only. No UDP/QUIC. |
-| Windows | PowerShell `Get-NetTCPConnection` | **no** (shown as n/a) | Windows does not give per-connection counts to a normal program. TOL records that a connection existed, which program opened it, and when. |
+| Windows | PowerShell `Get-NetTCPConnection` | **only as Administrator** (otherwise shown as n/a) | Windows gives per-connection counts only to a program run as Administrator, through its per-connection TCP statistics; counting starts when TOL first sees a connection. Without that, TOL records that a connection existed, which program opened it, and when. |
 
 If the source cannot be read, TOL says so and does not guess.
 
@@ -96,7 +96,7 @@ An optional Firefox extension can record, per request, the destination host, the
   that the computer was not tampered with before. Without a trusted timestamp, times come from the computer's clock.
 - **Not independently certified.** No third party has audited TOL. Packet capture and an expert certification are not
   yet part of the package.
-- **Windows amounts.** On Windows, byte counts are unavailable and shown as n/a.
+- **Windows amounts.** On Windows, byte counts are available only when TOL runs as Administrator, and only from the moment each connection is first seen; otherwise they are shown as n/a.
 
 ## 8. Privacy and security of the tool itself
 
