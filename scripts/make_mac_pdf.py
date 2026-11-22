@@ -51,7 +51,7 @@ bullets = lambda items: [Paragraph(t, BUL, bulletText="•") for t in items]
 
 story = [
     p("TOL for Mac", H1),
-    p("Version 0.4.6. A transparent, neutral window that shows which companies a Mac is sending data to. "
+    p("Version 0.4.6. A transparent, neutral window that shows who a Mac is sending data to. "
       "Below are the features that were run on a real Mac and worked. Nothing here is listed unless it was run.", SUB),
 
     p("Features that worked", H2),

@@ -56,7 +56,7 @@ def footer(canvas, doc):
 
 story = [
     p("TOL: what it can do today", H1),
-    p("Version 0.4.6 for macOS and Windows. A transparent, neutral window that shows which companies a computer is "
+    p("Version 0.4.6 for macOS and Windows. A transparent, neutral window that shows who a computer is "
       "sending data to. It only watches. It does not block, change or read anything.", SUB),
 
     p("What it does", H2),

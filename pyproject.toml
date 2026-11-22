@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tol"
 version = "0.4.7"
-description = "TOL: a transparent, neutral view of which companies your device is sending data to"
+description = "TOL: a transparent, neutral view of who your device is sending data to"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.9"

@@ -1,6 +1,6 @@
 # TOL
 
-**See which companies your computer is sending data to.** Free, open source and early.
+**See who your computer is sending data to.** Free, open source and early.
 
 TOL watches your computer's network connections and shows, in plain language, where data is going: which app, which destination, how much.
 It can look up who holds an address, and it can save a record with an independent timestamp that anyone can check.
@@ -25,7 +25,8 @@ Get the files from the [Releases page](https://github.com/rickwatson5166/TOL-pub
 - Optional Firefox add-on that records whether your browser sent the Global Privacy Control signal. Observer only.
 
 ## What it does not do
-- It does not block anything, and it cannot tell you whether a company's use of your data is good or bad.
+- It does not block anything, and it cannot tell you whether anyone's use of your data is good or bad.
+- It does not always know who is on the other end. It may be a company, a cloud or network provider, an individual's server, or something unidentified. Each label says how sure TOL is.
 - It does not read the contents of your traffic. There is no packet capture.
 - It can miss very short connections. The registry holder of an address is often a cloud provider, not the service you were using.
 - A record is not legal proof by itself. Have a qualified person review it before relying on it.

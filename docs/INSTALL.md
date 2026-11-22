@@ -28,7 +28,7 @@ Each file's SHA-256 fingerprint is listed on the release page. On a Mac: `shasum
 
 ## What TOL does on your computer
 
-- Shows which companies your computer is talking to. It only watches; it blocks and changes nothing.
+- Shows who your computer is talking to. It only watches; it blocks and changes nothing.
 - Sends nothing out unless you ask. Two optional buttons send something: **Identify** sends one public address to
   a public registry (rdap.org), and **Add trusted timestamp** sends a 32-byte fingerprint to a timestamp service.
 - Keeps everything it saves in a folder named `.tol` in your home folder. Delete the folder to remove it all.

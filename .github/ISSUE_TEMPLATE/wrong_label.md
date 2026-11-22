@@ -1,6 +1,6 @@
 ---
 name: A name, label or claim is wrong
-about: TOL names the wrong company, or a sentence overreaches
+about: TOL names the wrong owner, or a sentence overreaches
 ---
 **What does TOL say?** (the destination, the label, or the exact sentence in the docs)
 
